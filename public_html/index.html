@@ -61,90 +61,73 @@
                 console.log(gugun);
 
                 $.ajax({
-                    url: "/pharmach_list",
+                url: "map_data.xml",
                     type: "GET",
                     cache: false,
-                    dataType: "json",
+                    dataType: "xml",
                     data: {"Q0" : sido, "Q1" : gugun, "QT" : "", "QN" : "", "ORD" : "", "pageNo" : "1", "numOfRows" : "500"},
-                    success: function(data){
-                        console.log(data);
-                        //item이 여러개이기 때문에 반복문 실행 
-
-                        data.items.item.forEach(function(it, index){
-                            let dutyName = it.dutyName; //이름
-                            let dutyAddr = it.dutyAddr; //주소
-                            let dutyTel1 = it.dutyTel1; //전화번호
-
-                            let dutyTime = ""; //업무시간                   
-                            if(it.dutyTime1s && it.dutyTime1c){
-                                dutyTime += "월요일: " + it.dutyTime1s + " ~ " + it.dutyTime1c + "<br />";
-                            }
-                            if(it.dutyTime2s && it.dutyTime3c){
-                                dutyTime += "화요일: "+ it.dutyTime2s + " ~ " + it.dutyTime2c + "<br />";
-                            }
-                            if(it.dutyTime3s && it.dutyTime3c){
-                                dutyTime += "수요일: "+ it.dutyTime3s + " ~ " + it.dutyTime3c + "<br />";
-                            }
-                            if(it.dutyTime4s && it.dutyTime4c){
-                                dutyTime += "목요일: "+ it.dutyTime4s + " ~ " + it.dutyTime4c + "<br />";
-                            }
-                            if(it.dutyTime5s && it.dutyTime5c){
-                                dutyTime += "금요일: "+ it.dutyTime5s + " ~ " + it.dutyTime5c + "<br />";
-                            }
-                            if(it.dutyTime6s && it.dutyTime6c){
-                                dutyTime += "토요일: "+ it.dutyTime6s + " ~ " + it.dutyTime6c + "<br />";
-                            }
-                            if(it.dutyTime7s && it.dutyTime7c){
-                                dutyTime += "일요일: "+ it.dutyTime7s + " ~ " + it.dutyTime7c + "<br />";
-                            }
-                            if(it.dutyTime8s && it.dutyTime8c){
-                                dutyTime += "공휴일: "+ it.dutyTime8s + " ~ " + it.dutyTime8c + "<br />";
-                            }
-                            let cityhall = new naver.maps.LatLng(it.wgs84Lat, it.wgs84Lon);
-                            //마커생성
-                            let marker = new naver.maps.Marker({
-                                map: map,
-                                position: cityhall
-                            });
-                        
-                            //이 부분부터 붙여 넣기
-                            var contentString = [
-                                '<div class="iw_inner" style="padding: 0px 15px"',
-                                '   <h3>'+dutyName+'</h3>',
-                                '   <p>'+dutyAddr+'<br/>',   
-                                '   <button onclick="window.open(\'http://map.kakao.com/link/to/' +dutyName+ ', '+it.wgs84Lat+ ', '+it.wgs84Lon+'\');">카카오맵 연동</button>'+'<br/>',
-                                '      '+dutyTel1+'<br/>',
-                                '       '+dutyTime,
-                                '   </p>',
-                                '</div>'
-                            ].join('');
-                                
-                            var infowindow = new naver.maps.InfoWindow({
-                                content: contentString,
-                                maxWidth: 140,
-                                backgroundColor: "#eee",
-                                borderColor: "#2db400",
-                                borderWidth: 5,
-                                anchorSize: new naver.maps.Size(30, 30),
-                                anchorSkew: true,
-                                anchorColor: "#eee",
-                                pixelOffset: new naver.maps.Point(20, -20)
-                            });
-                        
-                            naver.maps.Event.addListener(marker, "click", function(e) {
-                                if (infowindow.getMap()) {
-                                    infowindow.close();
-                                } else {
-                                    infowindow.open(map, marker);
-                                }
-                            });
-                            //붙여 넣은 부분 끝
-                        });
-                    }, //success end
-                    error: function(request, status, error){
-                        console.error("Ajax Call Error: ", status, error);
+                    success: function(data) {
+                    let items = $(data).find("item");  // XML에서 item 태그 찾기
+                    if (items.length === 0) {
+                        console.error("XML에서 <item> 태그를 찾을 수 없음");
+                        return;
                     }
-                }); //$.ajax end
+
+                items.each(function(index, element) {
+                    let it = $(element); // XML 요소를 jQuery 객체로 변환
+                    let dutyName = it.find("dutyName").text();
+                    let dutyAddr = it.find("dutyAddr").text();
+                    let dutyTel1 = it.find("dutyTel1").text();
+                    let dutyFax = it.find("dutyFax").text();
+                    let dutyTime1c = it.find("dutyTime1c").text();
+                    let dutyTime1s = it.find("dutyTime1s").text();
+                    let lat = parseFloat(it.find("wgs84Lat").text());
+                    let lon = parseFloat(it.find("wgs84Lon").text());
+                    
+                
+                    if (!lat || !lon) {
+                        console.warn(`위치 정보가 없는 항목: ${dutyName}`);
+                        return;
+                    }
+                
+                    let cityhall = new naver.maps.LatLng(lat, lon);
+                    let marker = new naver.maps.Marker({
+                        map: map,
+                        position: cityhall
+                    });
+                
+                    let contentString = `
+                        <div class="iw_inner" style="padding: 0px 15px;">
+                            <h3>${dutyName}</h3> 
+                            <button onclick="window.open('https://map.kakao.com/link/to/${dutyName},${lat},${lon}');">카카오맵 연동</button><br />
+                            
+                            <p>운영 시간 : ${dutyTime1s}~${dutyTime1c}</p> <>
+                            <p>운영 장소 : ${dutyAddr} </p>
+                            <p>혼잡도 : ${dutyFax}</p>
+                        </div>
+                    `;
+                    
+                    let infowindow = new naver.maps.InfoWindow({
+                        content: contentString,
+                        maxWidth: 440,
+                        backgroundColor: "#eee",
+                        borderColor: "#666",
+                        borderWidth: 3
+                    });
+                
+                    naver.maps.Event.addListener(marker, "click", function() {
+                        if (infowindow.getMap()) {
+                            infowindow.close();
+                        } else {
+                            infowindow.open(map, marker);
+                        }
+                    });
+                });
+                },
+                error: function(request, status, error){
+                    console.error("Ajax Call Error: ", status, error);
+                    }
+            }); //$.ajax end
             });
         });    
 
