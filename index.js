@@ -29,7 +29,7 @@ app.get("/pharmach_list", (req, res) => {
                 //params도 여러개라서 때문에 중괄호를 써서 표현
                 params : {
                     //serviceKey는 프로그램 변수에 할당할 때는 암호화되지 않은 Decoding 형태의 키를 넣는다. 
-                    "serviceKey" : "bHQPhKEgeXQ6YbbdoSpEpUNZEtSTE4umoIOw4Oj9V6MLRf8+Oj9iSrv8xSR8X6mezmZaHJDGACDkp5mcmTTv8w==",
+                    "serviceKey" : "TR9SiJfLDu9G7hDWYb/QdZ8UWDNr8a02u59fN62ODfgy8TYZJl1ZVGvZ0W2znOOx7AD4K1ElX/PZA04mk3u8RA==",
                     "Q0" : req.query.Q0,
                     "Q1" : req.query.Q1,
                     "QT" : req.query.QT,
